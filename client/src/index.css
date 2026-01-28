@@ -1,0 +1,234 @@
+/* client/src/index.css */
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800&display=swap');
+
+:root {
+  --bg-main: #141414;
+  --bg-card: #1f1f1f;
+  --primary-movie: #e50914; /* Đỏ Netflix */
+  --primary-music: #1db954; /* Xanh Spotify */
+  --text-white: #ffffff;
+  --text-gray: #b3b3b3;
+  --gradient-dark: linear-gradient(180deg, rgba(20,20,20,0) 0%, rgba(20,20,20,1) 100%);
+  --shadow-glow: 0 0 20px rgba(0,0,0,0.5);
+}
+
+body {
+  background-color: var(--bg-main);
+  color: var(--text-white);
+  font-family: 'Montserrat', sans-serif; /* Font chữ sang trọng hơn */
+  margin: 0;
+  overflow-x: hidden;
+}
+
+/* Scrollbar đẹp hơn */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #000;
+}
+::-webkit-scrollbar-thumb {
+  background: #333;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--primary-movie);
+}
+
+/* Class tiện ích cho Layout */
+.page-container {
+  padding: 20px 4% 50px 4%; /* Căn lề chuẩn Netflix */
+  min-height: 100vh;
+}
+
+.section-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Hiệu ứng Grid Responsive xịn hơn */
+.media-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 20px;
+  padding-bottom: 40px;
+}
+
+/* Nút bấm Hero Section */
+.btn-hero {
+  padding: 12px 30px;
+  font-size: 1.2rem;
+  font-weight: bold;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  transition: transform 0.2s;
+}
+.btn-hero:hover {
+  transform: scale(1.05);
+}
+.btn-play {
+  background: white;
+  color: black;
+}
+.btn-more {
+  background: rgba(109, 109, 110, 0.7);
+  color: white;
+  backdrop-filter: blur(5px);
+}
+
+/* --- TÙY CHỈNH PAGINATION SPLIDE (SỐ THỨ TỰ) --- */
+
+/* 1. Định vị lại khung chứa các nút */
+.splide__pagination {
+    bottom: 20px !important; 
+    gap: 10px; 
+    counter-reset: pagination-num; 
+    
+    /* --- 👇 THÊM 2 DÒNG QUAN TRỌNG NÀY --- */
+    z-index: 9999 !important;  /* Đẩy lên lớp cao nhất, đè lên mọi thứ khác */
+    pointer-events: auto !important; /* Ép buộc trình duyệt cho phép bấm vào */
+}
+
+/* 2. Biến dấu chấm thành Ô VUÔNG */
+.splide__pagination__page {
+    width: 35px !important;       /* Chiều rộng */
+    height: 35px !important;      /* Chiều cao bằng chiều rộng -> Vuông */
+    border-radius: 4px !important;/* Bo góc nhẹ (nếu thích vuông sắc cạnh thì để 0) */
+    background: rgba(0, 0, 0, 0.6) !important; /* Màu nền đen mờ */
+    border: 1px solid rgba(255, 255, 255, 0.3) !important; /* Viền mỏng */
+    opacity: 1 !important;        /* Hiển thị rõ */
+    
+    /* Căn chỉnh số vào giữa ô */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    
+    /* Font chữ số */
+    color: #fff;
+    font-weight: bold;
+    font-size: 14px;
+    font-family: 'Montserrat', sans-serif;
+    transition: all 0.3s ease;
+}
+
+/* 3. Tự động điền số (1, 2, 3...) vào trong ô */
+.splide__pagination__page::before {
+    counter-increment: pagination-num; /* Tăng số lên 1 đơn vị */
+    content: counter(pagination-num);  /* Hiển thị số đó ra */
+}
+
+/* 4. Trạng thái khi nút ĐANG ĐƯỢC CHỌN (Active) */
+.splide__pagination__page.is-active {
+    background: #e50914 !important; /* Màu đỏ Netflix */
+    border-color: #e50914 !important;
+    transform: scale(1.1) translateY(-5px); /* Phóng to nhẹ và bay lên */
+    box-shadow: 0 4px 10px rgba(229, 9, 20, 0.5); /* Đổ bóng phát sáng */
+}
+
+/* 5. Trạng thái khi di chuột vào (Hover) */
+.splide__pagination__page:hover {
+    background: rgba(255, 255, 255, 0.2) !important;
+    border-color: white !important;
+}
+
+/* Hiệu ứng hover cho gợi ý tìm kiếm */
+.search-item:hover {
+    background-color: #333 !important;
+}
+
+/* Xóa viền xanh mặc định của trình duyệt khi click vào ô input */
+input:focus {
+    border-color: #1c62b9 !important; /* Màu xanh YouTube */
+}
+
+/* --- Style cho Menu Nav --- */
+.nav-link {
+    color: #ddd;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 1rem;
+    transition: color 0.3s ease;
+}
+
+.nav-link:hover {
+    color: white; /* Sáng lên khi hover */
+    text-shadow: 0 0 10px rgba(255, 255, 255, 0.5); /* Phát sáng nhẹ */
+}
+
+/* --- Style cho Item trong Menu Thể Loại --- */
+.genre-item {
+    color: #aaa;
+    font-size: 0.9rem;
+    padding: 5px 8px;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: all 0.2s;
+}
+
+.genre-item:hover {
+    background: rgba(255, 255, 255, 0.1); /* Nền xám mờ */
+    color: white;
+    padding-left: 12px; /* Hiệu ứng dịch chuyển nhẹ sang phải */
+}
+
+/* --- CUSTOM PAGINATION (STYLE HERO SECTION) --- */
+
+.btn-pagination {
+    /* 1. Kích thước & Font chữ */
+    min-width: 45px;          /* Chiều rộng tối thiểu để nút vuông vức đẹp hơn */
+    height: 45px;             /* Chiều cao bằng chiều rộng */
+    border-radius: 4px;       /* Bo góc nhẹ giống nút Hero */
+    font-weight: 700;         /* Chữ đậm */
+    font-size: 1.1rem;
+    border: none;             /* Bỏ viền xấu xí mặc định */
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 6px;            /* Khoảng cách giữa các nút rộng ra xíu */
+
+    /* 2. STYLE MẶC ĐỊNH (Giống nút "Chi tiết" - Glassmorphism) */
+    background: rgba(109, 109, 110, 0.7); /* Màu xám kính trong suốt */
+    color: white;
+    backdrop-filter: blur(5px);           /* Hiệu ứng làm mờ nền phía sau */
+    box-shadow: 0 2px 5px rgba(0,0,0,0.3); /* Đổ bóng nhẹ */
+}
+
+/* Hiệu ứng khi di chuột (Phóng to nhẹ) */
+.btn-pagination:hover:not(:disabled) {
+    transform: scale(1.1);                /* Phóng to 10% */
+    background: rgba(255, 255, 255, 0.3); /* Sáng lên một chút */
+    box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+}
+
+/* 3. STYLE KHI ĐANG CHỌN (Giống nút "Phát Ngay" - Trắng nổi bật) */
+.btn-pagination.active-movie,
+.btn-pagination.active-song {
+    background: white !important; /* Nền trắng tuyệt đối */
+    color: black !important;      /* Chữ đen tương phản mạnh */
+    transform: scale(1.15);       /* To hơn các nút khác một chút */
+    box-shadow: 0 0 15px rgba(255, 255, 255, 0.4); /* Phát sáng màu trắng */
+    border: 2px solid white;      /* Viền trắng */
+}
+
+/* 4. Style khi nút bị Vô hiệu hóa (Trang đầu/cuối) */
+.btn-pagination:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+    background: rgba(50, 50, 50, 0.5);
+    transform: none; /* Không phóng to khi bị disable */
+}
+
+
+
+
+

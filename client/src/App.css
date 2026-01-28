@@ -1,0 +1,132 @@
+/* client/src/App.css */
+:root {
+  --bg-color: #141414;
+  --card-bg: #1f1f1f;
+  --text-primary: #ffffff;
+  --text-secondary: #b3b3b3;
+  --accent-movie: #00bcd4; /* Màu xanh cho phim */
+  --accent-song: #ffc107;  /* Màu vàng cho nhạc */
+  --nav-bg: #000000;
+}
+
+body {
+  margin: 0;
+  font-family: 'Inter', sans-serif;
+  background-color: var(--bg-color);
+  color: var(--text-primary);
+}
+
+/* --- THANH MENU (NAVBAR) --- */
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 30px;
+  background-color: var(--nav-bg);
+  border-bottom: 1px solid #333;
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+}
+
+.nav-links {
+  display: flex;
+  gap: 25px;
+}
+
+.nav-link {
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 1.1rem;
+  transition: opacity 0.3s;
+}
+.nav-link:hover { opacity: 0.8; }
+
+/* --- Ô TÌM KIẾM --- */
+.search-form {
+  display: flex;
+  background: #333;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.search-input {
+  background: transparent;
+  border: none;
+  color: white;
+  padding: 8px 12px;
+  outline: none;
+}
+
+.search-btn {
+  background: #e50914;
+  border: none;
+  color: white;
+  padding: 8px 15px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.search-btn:hover { background: #b20710; }
+
+/* --- GRID HỆ THỐNG (Dùng cho cả list phim và nhạc) --- */
+.grid-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 25px;
+  padding: 20px 0;
+}
+
+/* --- THẺ CARD (MOVIE/SONG) --- */
+.card {
+  background-color: var(--card-bg);
+  border-radius: 8px;
+  padding: 15px;
+  transition: transform 0.3s, box-shadow 0.3s;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+
+.card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+}
+
+.card-title {
+  margin: 0 0 8px 0;
+  font-size: 1.1rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis; /* Cắt chữ nếu quá dài... */
+}
+
+.card-subtitle {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+.score-badge {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: rgba(0, 0, 0, 0.7);
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  color: #4CAF50;
+  border: 1px solid #4CAF50;
+}
+
+/* --- TRANG CHI TIẾT --- */
+.detail-container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 40px 20px;
+}
+
+.detail-header {
+  border-bottom: 1px solid #333;
+  padding-bottom: 30px;
+  margin-bottom: 30px;
+}
