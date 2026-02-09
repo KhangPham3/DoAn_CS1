@@ -6,254 +6,83 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+const PORT = 5000;
+
 // Cấu hình Database
 const dbConfig = {
     user: 'ADMIN', 
-    password: 'KhangPham2005', // 
+    password: 'KhangPham2005', 
     server: 'localhost', 
-    port: 1433, // Mặc định cổng SQL Server
+    port: 1433, 
     database: 'RecommenderDB', 
     options: {
         encrypt: false,
         trustServerCertificate: true,
-        //instanceName: 'SQLEXPRESS'
     }
 };
 
-// API lấy danh sách phim
-app.get('/api/movies', async (req, res) => {
-    try {
-        let pool = await sql.connect(dbConfig);
-        console.log("Đã kết nối SQL thành công!"); // Log để kiểm tra
-        
-        let result = await pool.request().query("SELECT * FROM Movies");
-        
-        res.json(result.recordset);
-    } catch (err) {
-        console.log("Lỗi:", err);
-        res.status(500).json({ error: err.message });
-    }
-});
-
-
-// API Lấy chi tiết 1 bộ phim theo ID
-app.get('/api/movies/:id', async (req, res) => {
-    try {
-        const id = req.params.id; // Lấy số 1 từ URL
-        let pool = await sql.connect(dbConfig);
-        
-        // Dùng @input để tránh lỗi bảo mật SQL Injection
-        let result = await pool.request()
-            .input('id', sql.Int, id)
-            .query("SELECT * FROM Movies WHERE MovieID = @id");
-
-        if (result.recordset.length === 0) {
-            return res.status(404).json({ message: 'Không tìm thấy phim này!' });
-        }
-
-        // Trả về phần tử đầu tiên (vì ID là duy nhất)
-        res.json(result.recordset[0]);
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
-});
-
-// ... (Code listen port ở dưới)
-
-const PORT = 5000;
-// ... (Code cũ ở trên)
-
-// API Gợi ý phim dựa trên độ tương đồng (Content-Based Filtering)
-app.get('/api/movies/:id/recommend', async (req, res) => {
-    try {
-        const currentId = parseInt(req.params.id);
-        const pool = await sql.connect(dbConfig);
-
-        // 1. Lấy thông tin phim hiện tại
-        const currentMovieResult = await pool.request()
-            .input('id', sql.Int, currentId)
-            .query("SELECT * FROM Movies WHERE MovieID = @id");
-
-        if (currentMovieResult.recordset.length === 0) {
-            return res.status(404).json({ message: 'Không tìm thấy phim' });
-        }
-
-        const currentMovie = currentMovieResult.recordset[0];
-        
-        // Tách Tags của phim hiện tại thành mảng (Ví dụ: "hành động, bom tấn" -> ["hành động", "bom tấn"])
-        // toLowerCase() để không phân biệt hoa thường
-        const currentTags = currentMovie.Tags 
-            ? currentMovie.Tags.toLowerCase().split(',').map(t => t.trim()) 
-            : [];
-
-        // 2. Lấy tất cả các phim khác để so sánh
-        const allMoviesResult = await pool.request()
-            .input('id', sql.Int, currentId)
-            .query("SELECT * FROM Movies WHERE MovieID != @id"); // Trừ phim đang xem ra
-
-        const allMovies = allMoviesResult.recordset;
-
-        // 3. Tính điểm tương đồng cho từng phim
-        const scoredMovies = allMovies.map(movie => {
-            let score = 0;
-            const movieTags = movie.Tags 
-                ? movie.Tags.toLowerCase().split(',').map(t => t.trim()) 
-                : [];
-
-            // Thuật toán: Đếm số tag trùng nhau
-            currentTags.forEach(tag => {
-                if (movieTags.includes(tag)) {
-                    score += 1; // Trùng 1 từ khóa cộng 1 điểm
-                }
-            });
-            
-            // Cộng thêm điểm nếu cùng Thể loại (Genre)
-            if (movie.Genre === currentMovie.Genre) {
-                score += 0.5;
-            }
-
-            return { ...movie, score }; // Trả về phim kèm điểm số
-        });
-
-        // 4. Sắp xếp điểm từ cao xuống thấp và lấy Top 5
-        const recommendations = scoredMovies
-            .filter(m => m.score > 0) // Chỉ lấy phim có liên quan
-            .sort((a, b) => b.score - a.score) // Sắp xếp giảm dần
-            .slice(0, 5); // Lấy 5 phim đầu
-
-        res.json(recommendations);
-
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ error: err.message });
-    }
-});
-
-// MODULE ÂM NHẠC (SONGS API)
+// ==========================================
+// CÁC API NGƯỜI DÙNG (AUTH)
 // ==========================================
 
-// 1. Lấy danh sách bài hát
-app.get('/api/songs', async (req, res) => {
-    try {
-        let pool = await sql.connect(dbConfig);
-        let result = await pool.request().query("SELECT * FROM Songs");
-        res.json(result.recordset);
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
-});
-
-// 2. Lấy chi tiết 1 bài hát
-app.get('/api/songs/:id', async (req, res) => {
-    try {
-        const id = req.params.id;
-        let pool = await sql.connect(dbConfig);
-        let result = await pool.request()
-            .input('id', sql.Int, id)
-            .query("SELECT * FROM Songs WHERE SongID = @id"); // Lưu ý: SongID
-
-        if (result.recordset.length === 0) return res.status(404).json({ message: 'Không tìm thấy bài hát' });
-        res.json(result.recordset[0]);
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
-});
-
-// 3. Gợi ý bài hát tương đồng (AI Logic cho Nhạc)
-app.get('/api/songs/:id/recommend', async (req, res) => {
-    try {
-        const currentId = parseInt(req.params.id);
-        const pool = await sql.connect(dbConfig);
-
-        // Lấy bài hát hiện tại
-        const currentSongResult = await pool.request().input('id', sql.Int, currentId).query("SELECT * FROM Songs WHERE SongID = @id");
-        if (currentSongResult.recordset.length === 0) return res.status(404).json({ message: 'Không tìm thấy' });
-        
-        const currentSong = currentSongResult.recordset[0];
-        const currentTags = currentSong.Tags ? currentSong.Tags.toLowerCase().split(',').map(t => t.trim()) : [];
-
-        // Lấy các bài còn lại
-        const allSongsResult = await pool.request().input('id', sql.Int, currentId).query("SELECT * FROM Songs WHERE SongID != @id");
-        
-        // Tính điểm (giống hệt phim)
-        const scoredSongs = allSongsResult.recordset.map(song => {
-            let score = 0;
-            const songTags = song.Tags ? song.Tags.toLowerCase().split(',').map(t => t.trim()) : [];
-            
-            currentTags.forEach(tag => {
-                if (songTags.includes(tag)) score += 1;
-            });
-
-            if (song.Genre === currentSong.Genre) score += 0.5; // Cùng thể loại nhạc cộng điểm
-            return { ...song, score };
-        });
-
-        // Sắp xếp và lấy Top 5
-        const recommendations = scoredSongs.filter(s => s.score > 0).sort((a, b) => b.score - a.score).slice(0, 5);
-        res.json(recommendations);
-
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
-});
-
-// ==========================================
-// MODULE TÌM KIẾM (SEARCH API)
-// ==========================================
-
-app.get('/api/search', async (req, res) => {
-    try {
-        const keyword = req.query.q; // Lấy từ khóa từ URL (VD: ?q=mai)
-        
-        if (!keyword) return res.json({ movies: [], songs: [] });
-
-        const pool = await sql.connect(dbConfig);
-        
-        // 1. Tìm trong bảng Phim (Tìm theo Tên hoặc Tags)
-        const movieResult = await pool.request()
-            .input('kw', sql.NVarChar, `%${keyword}%`) // Dùng % để tìm kiếm tương đối
-            .query("SELECT * FROM Movies WHERE Title LIKE @kw OR Tags LIKE @kw");
-
-        // 2. Tìm trong bảng Nhạc (Tìm theo Tên, Ca sĩ hoặc Tags)
-        const songResult = await pool.request()
-            .input('kw', sql.NVarChar, `%${keyword}%`)
-            .query("SELECT * FROM Songs WHERE Title LIKE @kw OR Artist LIKE @kw OR Tags LIKE @kw");
-
-        // Trả về cả 2 danh sách
-        res.json({
-            movies: movieResult.recordset,
-            songs: songResult.recordset
-        });
-
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
-
-    // ... (Các phần import và config DB cũ giữ nguyên)
-
-// 1. API ĐĂNG KÝ (Register)
+// 1. API ĐĂNG KÝ
+// 1. API ĐĂNG KÝ (Register) - Đã thêm Validate năm sinh
 app.post('/api/register', async (req, res) => {
     const { username, password, fullName, email, birthYear, gender } = req.body;
+
+    // --- 👇 LOGIC KIỂM TRA NĂM SINH (MỚI) 👇 ---
+    const currentYear = new Date().getFullYear(); // Lấy năm hiện tại (ví dụ: 2026)
+    const userBirthYear = parseInt(birthYear); // Chuyển đổi sang số nguyên cho chắc chắn
+
+    // 1. Kiểm tra nếu nhập năm tương lai hoặc năm hiện tại
+    if (userBirthYear >= currentYear) {
+        return res.status(400).json({ 
+            success: false, 
+            message: "Năm sinh không hợp lệ!" 
+        });
+    }
+
+    // 2. Kiểm tra độ tuổi (Phải >= 16 tuổi)
+    if (currentYear - userBirthYear < 16) {
+        return res.status(400).json({ 
+            success: false, 
+            message: "Bạn phải từ 16 tuổi trở lên để đăng ký tài khoản!" 
+        });
+    }   
+    
+    
+        // --- 👆 HẾT PHẦN KIỂM TRA 👆 ---
+
     try {
         let pool = await sql.connect(dbConfig);
         
         // Kiểm tra xem user đã tồn tại chưa
         const checkUser = await pool.request()
-            .input('Username', sql.VarChar, username)
+            .input('Username', sql.VarChar(50), username)
             .query("SELECT * FROM Users WHERE Username = @Username");
             
         if (checkUser.recordset.length > 0) {
             return res.status(400).json({ success: false, message: "Tên đăng nhập đã tồn tại!" });
         }
 
-        // Lưu vào SQL (Lưu ý: Mật khẩu nên mã hóa, nhưng ở đây ta lưu text trước cho đơn giản)
+        const checkEmail = await pool.request()
+            .input('Email', sql.VarChar(100), email)
+            .query("SELECT * FROM Users WHERE Email = @Email");
+
+        if (checkEmail.recordset.length > 0) {
+            return res.status(400).json({ success: false, message: "Email đã được sử dụng!" });
+        }
+
+
+
+        // Lưu vào SQL
         await pool.request()
-            .input('Username', sql.VarChar, username)
-            .input('PasswordHash', sql.VarChar, password) // Sau này bạn nên dùng bcrypt để hash
-            .input('FullName', sql.NVarChar, fullName)
-            .input('Email', sql.VarChar, email)
-            .input('BirthYear', sql.Int, birthYear)
-            .input('Gender', sql.NVarChar, gender)
+            .input('Username', sql.VarChar(50), username)
+            .input('PasswordHash', sql.VarChar(255), password)
+            .input('FullName', sql.NVarChar(100), fullName)
+            .input('Email', sql.VarChar(100), email)
+            .input('BirthYear', sql.Int, userBirthYear) // Dùng biến đã parse
+            .input('Gender', sql.NVarChar(20), gender)
             .query(`
                 INSERT INTO Users (Username, PasswordHash, FullName, Email, BirthYear, Gender)
                 VALUES (@Username, @PasswordHash, @FullName, @Email, @BirthYear, @Gender)
@@ -261,24 +90,28 @@ app.post('/api/register', async (req, res) => {
 
         res.json({ success: true, message: "Đăng ký thành công!" });
     } catch (err) {
-        console.error(err);
-        res.status(500).json({ success: false, message: "Lỗi Server" });
+        console.error("Lỗi Đăng Ký:", err);
+        // Kiểm tra lỗi SQL cụ thể
+        if (err.message.includes('Invalid column name')) {
+            res.status(500).json({ success: false, message: "Lỗi SQL: Thiếu cột BirthYear/Gender trong Database" });
+        } else {
+            res.status(500).json({ success: false, message: "Lỗi Server" });
+        }
     }
 });
 
-// 2. API ĐĂNG NHẬP (Login)
+// 2. API ĐĂNG NHẬP
 app.post('/api/login', async (req, res) => {
     const { username, password } = req.body;
     try {
         let pool = await sql.connect(dbConfig);
         const result = await pool.request()
-            .input('Username', sql.VarChar, username)
-            .input('PasswordHash', sql.VarChar, password)
+            .input('Username', sql.VarChar(50), username)
+            .input('PasswordHash', sql.VarChar(255), password)
             .query("SELECT * FROM Users WHERE Username = @Username AND PasswordHash = @PasswordHash");
 
         if (result.recordset.length > 0) {
             const user = result.recordset[0];
-            // Trả về thông tin user (trừ mật khẩu)
             res.json({ 
                 success: true, 
                 user: { 
@@ -288,42 +121,62 @@ app.post('/api/login', async (req, res) => {
                 } 
             });
         } else {
-            res.status(401).json({ success: false, message: "Sai tên đăng nhập hoặc mật khẩu" });
+            res.status(401).json({ success: false, message: "Sai tài khoản hoặc mật khẩu" });
         }
     } catch (err) {
+        console.error("Lỗi Đăng Nhập:", err);
         res.status(500).json({ success: false, message: "Lỗi Server" });
     }
 });
 
-// ... (Giữ nguyên phần app.listen)
-});
+// ==========================================
+// CÁC API KHÁC (Search, Movies, Logs...)
+// ==========================================
 
-// ... (Code app.listen ở dưới)
-app.listen(PORT, () => {
-    console.log(`Server đang chạy tại http://localhost:${PORT}`);
-}); 
-
-// API ghi nhận hành động người dùng
-app.post('/api/log-interaction', async (req, res) => {
-    try{
-        const{ userId, itemId, itemType, actionType } = req.body;
+app.get('/api/search', async (req, res) => {
+    try {
+        const keyword = req.query.q; 
+        if (!keyword) return res.json({ movies: [], songs: [] });
 
         let pool = await sql.connect(dbConfig);
+        const movieResult = await pool.request()
+            .input('kw', sql.NVarChar, `%${keyword}%`)
+            .query("SELECT * FROM Movies WHERE Title LIKE @kw OR Tags LIKE @kw");
 
-        await pool.request()
-        .input('UserID', sql.Int, userId || null)
-        .input('ItemID', sql.NVarChar, itemId)
-        .input('ItemType', sql.NVarChar, itemType)
-        .input('ActionType', sql.NVarChar, actionType)
-        .query (`
-            INSERT INTO UserInteractions (UserID, ItemID, ItemType, ActionType)
-            VALUES (@UserID, @ItemID, @ItemType, @ActionType)
-            `);
-        
-    res.status(200).send({message: 'Log saved'});
-    }   catch (err)
-    {
-        console.error("Lỗi ghi log:",err);
-        res.status(500).send({error: 'Lỗi Server'});
+        const songResult = await pool.request()
+            .input('kw', sql.NVarChar, `%${keyword}%`)
+            .query("SELECT * FROM Songs WHERE Title LIKE @kw OR Artist LIKE @kw OR Tags LIKE @kw");
+
+        res.json({
+            movies: movieResult.recordset,
+            songs: songResult.recordset
+        });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
     }
+});
+
+// API Ghi log
+app.post('/api/log-interaction', async (req, res) => {
+    try {
+        const { userId, itemId, itemType, actionType } = req.body;
+        let pool = await sql.connect(dbConfig);
+        await pool.request()
+            .input('UserID', sql.Int, userId || null)
+            .input('ItemID', sql.NVarChar, itemId)
+            .input('ItemType', sql.NVarChar, itemType)
+            .input('ActionType', sql.NVarChar, actionType)
+            .query(`INSERT INTO UserInteractions (UserID, ItemID, ItemType, ActionType) VALUES (@UserID, @ItemID, @ItemType, @ActionType)`);
+        res.status(200).send({ message: 'Log saved' });
+    } catch (err) {
+        console.error("Lỗi ghi log:", err);
+        res.status(500).send({ error: 'Lỗi Server' });
+    }
+});
+
+// ==========================================
+// KHỞI CHẠY SERVER (LUÔN ĐỂ CUỐI CÙNG)
+// ==========================================
+app.listen(PORT, () => {
+    console.log(`Server đang chạy tại http://localhost:${PORT}`);
 });

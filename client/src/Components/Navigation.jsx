@@ -87,6 +87,8 @@ function Navigation() {
         movieGenres: ["Hành động", "Tình cảm", "Hài", "Kinh dị", "Viễn tưởng", "Hoạt hình"],
         songGenres: ["Pop", "Rap", "Ballad", "R&B", "EDM", "Indie"]
     };
+    
+    const staticAgeGroups = ["Mọi lứa tuổi", "Trên 7 tuổi", "Trên 13 tuổi", "Trên 16 tuổi", "Trên 18 tuổi"];
 
     const handleGenreMouseEnter = () => {
         if (genreMenuTimeoutRef.current) clearTimeout(genreMenuTimeoutRef.current);
@@ -209,7 +211,7 @@ function Navigation() {
             </div>
 
             {/* --- KHU VỰC 2: SEARCH BAR (GỌI API KÉP) --- */}
-            <div ref={searchRef} style={{ flex: 1, maxWidth: '500px', position: 'relative', marginTop: '10px' }}>
+            <div ref={searchRef} style={{ flex: 1, maxWidth: '500px', position: 'relative', marginTop: '3px', marginLeft: '200px' }}>
                 <form onSubmit={handleSearchSubmit} style={{ display: 'flex', width: '100%', alignItems: 'stretch' }}>
                     <input 
                         type="text" placeholder="Tìm phim hoặc bài hát..." value={keyword}
@@ -260,7 +262,7 @@ function Navigation() {
             <div style={{ minWidth: '300px' }}></div>
            
             {/* Nút login / signup */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '15px', marginRight: '50px' }}>
                 {user ? (
                     <>
                         <span style={{ color: 'white', fontWeight: 'bold' }}>Xin chào, {user.fullName}</span>
@@ -271,10 +273,11 @@ function Navigation() {
                 ) : (
                     <>
                         <button onClick={() => navigate('/login')} style={{ marginRight: '10px', padding: '10px 20px', background: '#e50914', color: 'white', border: 'none', borderRadius: '40px', cursor: 'pointer' }}>
-                            Đăng Nhập 
+                            Đăng Nhập / Đăng Ký 
                         </button>
                     </>
-                )}
+                )
+                }
             </div>
 
         </nav>
